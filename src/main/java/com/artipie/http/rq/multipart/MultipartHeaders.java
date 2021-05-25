@@ -33,9 +33,9 @@ final class MultipartHeaders implements Headers {
     private final Object lock;
 
     /**
-     * Temporary data buffer for accumulation.
+     * Temporary buffer accumulator.
      */
-    private volatile ByteBuffer data;
+    private final BufAccumulator accumulator;
 
     /**
      * Headers instance cache constructed from buffer.
@@ -48,7 +48,7 @@ final class MultipartHeaders implements Headers {
      */
     MultipartHeaders(final int cap) {
         this.lock = new Object();
-        this.data = ByteBuffer.allocate(cap).flip();
+        this.accumulator = new BufAccumulator(cap);
     }
 
     @Override
@@ -57,9 +57,7 @@ final class MultipartHeaders implements Headers {
         if (this.cache == null) {
             synchronized (this.lock) {
                 if (this.cache == null) {
-                    this.data.rewind();
-                    final byte[] arr = new byte[this.data.remaining()];
-                    this.data.get(arr);
+                    final byte[] arr = this.accumulator.array();
                     final String hstr = new String(arr, StandardCharsets.US_ASCII);
                     this.cache = new Headers.From(
                         Arrays.stream(hstr.split("\r\n")).map(
@@ -73,7 +71,7 @@ final class MultipartHeaders implements Headers {
                         ).collect(Collectors.toList())
                     );
                 }
-                this.data = null;
+                this.accumulator.close();
             }
         }
         return this.cache.iterator();
@@ -84,25 +82,8 @@ final class MultipartHeaders implements Headers {
      * @param chunk Part of headers bytes
      */
     void push(final ByteBuffer chunk) {
-        if (this.data == null) {
-            throw new IllegalStateException("Headers were constructured");
-        }
         synchronized (this.lock) {
-            if (this.data.capacity() - this.data.limit() >= chunk.remaining()) {
-                this.data.limit(this.data.limit() + chunk.remaining());
-                this.data.put(chunk);
-            } else {
-                final ByteBuffer resized =
-                    ByteBuffer.allocate(this.data.capacity() + chunk.capacity());
-                final int pos = this.data.position();
-                final int lim = this.data.limit();
-                this.data.flip();
-                resized.put(this.data);
-                resized.limit(lim + chunk.remaining());
-                resized.position(pos);
-                resized.put(chunk);
-                this.data = resized;
-            }
+            this.accumulator.push(chunk);
         }
     }
 }
