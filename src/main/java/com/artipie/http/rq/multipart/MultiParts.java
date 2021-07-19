@@ -7,6 +7,7 @@ package com.artipie.http.rq.multipart;
 import com.artipie.ArtipieException;
 import com.artipie.http.misc.ByteBufferTokenizer;
 import com.artipie.http.misc.DummySubscription;
+import com.artipie.http.misc.Pipeline;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
@@ -27,14 +28,9 @@ final class MultiParts implements Processor<ByteBuffer, RqMultipart.Part>,
     ByteBufferTokenizer.Receiver {
 
     /**
-     * Downstream references of parts.
+     * Upstream downstream pipeline.
      */
-    private final AtomicReference<Subscriber<? super RqMultipart.Part>> downstream;
-
-    /**
-     * Upstream subscription reference.
-     */
-    private final AtomicReference<Subscription> upstream;
+    private final Pipeline<RqMultipart.Part> pipeline;
 
     /**
      * Parts tokenizer.
@@ -70,9 +66,8 @@ final class MultiParts implements Processor<ByteBuffer, RqMultipart.Part>,
             this, boundary.getBytes(StandardCharsets.US_ASCII)
         );
         this.exec = Executors.newSingleThreadExecutor();
-        this.downstream = new AtomicReference<>();
-        this.upstream = new AtomicReference<>();
-        this.completion = new Completion<>(this.downstream);
+        this.pipeline = new Pipeline<>(this.exec);
+        this.completion = new Completion<>(this.pipeline);
         this.state = new State();
     }
 
@@ -86,26 +81,12 @@ final class MultiParts implements Processor<ByteBuffer, RqMultipart.Part>,
 
     @Override
     public void subscribe(final Subscriber<? super RqMultipart.Part> sub) {
-        if (this.downstream.compareAndSet(null, sub)) {
-            sub.onSubscribe(this.upstream.get());
-        } else {
-            sub.onSubscribe(DummySubscription.VALUE);
-            sub.onError(new IllegalStateException("Downstream already connected"));
-            return;
-        }
-        if (this.upstream.get() != null) {
-            this.upstream.get().request(1);
-        }
+        this.pipeline.connect(sub);
     }
 
     @Override
     public void onSubscribe(final Subscription sub) {
-        if (!this.upstream.compareAndSet(null, sub)) {
-            this.onError(new IllegalStateException("Can't subscribe twice"));
-        }
-        if (this.downstream.get() != null) {
-            sub.request(1);
-        }
+        this.pipeline.onSubscribe(sub);
     }
 
     @Override
@@ -115,9 +96,7 @@ final class MultiParts implements Processor<ByteBuffer, RqMultipart.Part>,
 
     @Override
     public void onError(final Throwable err) {
-        this.downstream.getAndSet(null).onError(
-            new ArtipieException("Upstream failed", err)
-        );
+        this.pipeline.onError(new ArtipieException("Upstream failed", err));
     }
 
     @Override
@@ -127,21 +106,17 @@ final class MultiParts implements Processor<ByteBuffer, RqMultipart.Part>,
 
     @Override
     public void receive(final ByteBuffer next, final boolean end) {
-        synchronized (this.upstream) {
+        synchronized (this.pipeline) {
             this.state.patch(next, end);
             if (this.state.shouldIgnore()) {
-                this.upstream.get().request(1L);
+                this.pipeline.request(1L);
                 return;
             }
             if (this.state.started()) {
                 this.completion.itemStarted();
                 this.current = new MultiPart(
-                    this.upstream.get(), this.completion,
-                    part -> {
-                        final Subscriber<? super RqMultipart.Part> subscriber =
-                            this.downstream.get();
-                        this.exec.submit(() -> subscriber.onNext(part));
-                    },
+                    this.pipeline, this.completion,
+                    part -> this.pipeline.onNext(part),
                     this.exec
                 );
             }

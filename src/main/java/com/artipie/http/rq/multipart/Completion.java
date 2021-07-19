@@ -4,6 +4,7 @@
  */
 package com.artipie.http.rq.multipart;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -21,29 +22,27 @@ final class Completion<T> {
      * @checkstyle AnonInnerLengthCheck (25 lines)
      */
     static final Completion<?> FAKE = new Completion<>(
-        new AtomicReference<>(
-            new Subscriber<Object>() {
-                @Override
-                public void onSubscribe(final Subscription sub) {
-                    // do nothing
-                }
-
-                @Override
-                public void onNext(final Object next) {
-                    // do nothing
-                }
-
-                @Override
-                public void onError(final Throwable err) {
-                    // do nothing
-                }
-
-                @Override
-                public void onComplete() {
-                    // do nothing
-                }
+        new Subscriber<Object>() {
+            @Override
+            public void onSubscribe(final Subscription sub) {
+                // do nothing
             }
-        )
+
+            @Override
+            public void onNext(final Object next) {
+                // do nothing
+            }
+
+            @Override
+            public void onError(final Throwable err) {
+                // do nothing
+            }
+
+            @Override
+            public void onComplete() {
+                // do nothing
+            }
+        }
     );
 
     /**
@@ -57,15 +56,15 @@ final class Completion<T> {
     private volatile boolean completed;
 
     /**
-     * Downstream subscriber reference.
+     * Downstream subscriber.
      */
-    private final AtomicReference<Subscriber<? super T>> downstream;
+    private final Subscriber<? super T> downstream;
 
     /**
      * New completion.
      * @param downstream Subscriber reference
      */
-    Completion(final AtomicReference<Subscriber<? super T>> downstream) {
+    Completion(final Subscriber<? super T> downstream) {
         this.downstream = downstream;
     }
 
@@ -76,7 +75,7 @@ final class Completion<T> {
     void itemCompleted() {
         synchronized (this.downstream) {
             if (--this.counter == 0 && this.completed) {
-                this.downstream.get().onComplete();
+                this.downstream.onComplete();
             }
         }
     }
@@ -98,7 +97,7 @@ final class Completion<T> {
         synchronized (this.downstream) {
             this.completed = true;
             if (this.counter == 0) {
-                this.downstream.get().onComplete();
+                this.downstream.onComplete();
             }
         }
     }
