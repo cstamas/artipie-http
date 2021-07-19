@@ -84,7 +84,7 @@ SOFTWARE.
     <dependency>
       <groupId>com.artipie</groupId>
       <artifactId>asto</artifactId>
-      <version>1.2.1</version>
+      <version>v1.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -95,7 +95,7 @@ SOFTWARE.
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-client</artifactId>
-      <version>4.1.0</version>
+      <version>4.1.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -153,13 +153,13 @@ SOFTWARE.
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>10.0.5</version>
+      <version>10.0.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>10.0.0</version>
+      <version>10.0.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
