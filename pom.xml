@@ -65,7 +65,7 @@ SOFTWARE.
   </scm>
   <properties>
     <qulice.license>${project.basedir}/LICENSE.header</qulice.license>
-    <surefire.version>3.0.0-M5</surefire.version>
+    <surefire.version>3.0.0-M6</surefire.version>
   </properties>
   <dependencies>
     <dependency>
