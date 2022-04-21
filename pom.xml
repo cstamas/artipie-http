@@ -80,6 +80,12 @@ SOFTWARE.
 
   <dependencies>
     <dependency>
+      <groupId>com.artipie</groupId>
+      <artifactId>asto</artifactId>
+      <version>v1.11.0</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
     </dependency>
@@ -92,24 +98,12 @@ SOFTWARE.
       <artifactId>rxjava2-jdk8-interop</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.json</groupId>
-      <artifactId>javax.json-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.artipie</groupId>
-      <artifactId>asto</artifactId>
-      <version>v1.11.0</version>
-    </dependency>
-    <dependency>
       <groupId>org.cqfn</groupId>
       <artifactId>rio</artifactId>
-      <version>0.3</version>
     </dependency>
     <dependency>
       <groupId>wtf.g4s8</groupId>
       <artifactId>mime</artifactId>
-      <version>v2.3.2+java8</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents.core5</groupId>
@@ -122,7 +116,27 @@ SOFTWARE.
       <version>5.1.3</version>
     </dependency>
 
+    <!-- provided servlet deps for wrappers -->
+    <dependency>
+      <groupId>javax.json</groupId>
+      <artifactId>javax.json-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>4.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Test only dependencies -->
+    <dependency>
+      <groupId>com.artipie</groupId>
+      <artifactId>vertx-server</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams-tck</artifactId>
@@ -132,12 +146,6 @@ SOFTWARE.
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.artipie</groupId>
-      <artifactId>vertx-server</artifactId>
-      <version>1.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -153,7 +161,6 @@ SOFTWARE.
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit-platform.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -167,13 +174,6 @@ SOFTWARE.
       <artifactId>javax.json</artifactId>
       <version>${javax.json.version}</version>
       <scope>test</scope>
-    </dependency>
-    <!-- provided servlet deps for wrappers -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>4.0.1</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -198,7 +198,12 @@ SOFTWARE.
       <artifactId>commons-lang3</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- integration tests -->
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.5</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -208,49 +213,16 @@ SOFTWARE.
         <artifactId>maven-surefire-plugin</artifactId>
         <dependencies>
           <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.1</version>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit-platform</artifactId>
+            <version>${surefire.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.4.0</version>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-testng</artifactId>
+            <version>${surefire.version}</version>
           </dependency>
         </dependencies>
-        <executions>
-          <!-- FIXME: reactive TCK tests are not executed for multipart processor -->
-          <!-- <execution> -->
-          <!--   <id>surefire-testng</id> -->
-          <!--   <phase>test</phase> -->
-          <!--   <goals> -->
-          <!--     <goal>test</goal> -->
-          <!--   </goals> -->
-          <!--   <configuration> -->
-          <!--     <skip>false</skip> -->
-          <!--     <includes> -->
-          <!--       <include>com.artipie.http.rq.multipart.MultipartTckTest</include> -->
-          <!--       <include>com.artipie.http.rq.multipart.MultipartsTckTest</include> -->
-          <!--     </includes> -->
-          <!--     <junitArtifactName>none:none</junitArtifactName> -->
-          <!--   </configuration> -->
-          <!-- </execution> -->
-          <execution>
-            <id>surefire-junit</id>
-            <phase>test</phase>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <skip>false</skip>
-              <excludes>
-                <exclude>com.artipie.http.rq.multipart.MultipartTckTest</exclude>
-                <exclude>com.artipie.http.rq.multipart.MultipartsTckTest</exclude>
-              </excludes>
-              <testNGArtifactName>none:none</testNGArtifactName>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>

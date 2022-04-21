@@ -33,6 +33,13 @@ public final class MultiPartsTckTest extends PublisherVerification<Integer> {
     private final TestEnvironment env;
 
     /**
+     * Ctor.
+     */
+    public MultiPartsTckTest() {
+        this(new TestEnvironment());
+    }
+
+    /**
      * Primary ctor.
      * @param env Tets environemnt
      */
